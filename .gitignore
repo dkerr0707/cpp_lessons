@@ -1,0 +1,10 @@
+# Build output
+bin/
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Per-project local Claude settings (not source)
+.claude/
