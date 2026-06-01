@@ -25,6 +25,7 @@ Standard: **C++23**. Flags: `-Wall -Wextra -Wpedantic -O2 -g`. Compiler: `g++`.
 | 06 | `06_cycle.cpp`    | Breaking a `shared_ptr` parent↔child cycle with `weak_ptr`; verified leak-free with ASan |
 | 07 | `07_pimpl.cpp`    | pimpl idiom: forward-declared `Impl`, `unique_ptr<Impl>`, special members declared in the class and defined out-of-line after `Impl` is complete |
 | 08 | `08_casts.cpp`    | `static_cast`, `dynamic_cast` (pointer→null, ref→`std::bad_cast`), `const_cast` at a legacy boundary, `std::bit_cast` for float↔uint32 |
+| 09 | `09_pointers.cpp` | Raw-pointer mechanics: address-of / indirection, pointer arithmetic over arrays, two-pointer reverse, the const-pointer maze, `->` vs `(*p).`, C-string `strlen` |
 
 ## How this was built
 
