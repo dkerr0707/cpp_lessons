@@ -26,6 +26,7 @@ Standard: **C++23**. Flags: `-Wall -Wextra -Wpedantic -O2 -g`. Compiler: `g++`.
 | 07 | `07_pimpl.cpp`    | pimpl idiom: forward-declared `Impl`, `unique_ptr<Impl>`, special members declared in the class and defined out-of-line after `Impl` is complete |
 | 08 | `08_casts.cpp`    | `static_cast`, `dynamic_cast` (pointer→null, ref→`std::bad_cast`), `const_cast` at a legacy boundary, `std::bit_cast` for float↔uint32 |
 | 09 | `09_pointers.cpp` | Raw-pointer mechanics: address-of / indirection, pointer arithmetic over arrays, two-pointer reverse, the const-pointer maze, `->` vs `(*p).`, C-string `strlen` |
+| 10 | `10_threading.cpp` | Concurrency primitives: `std::thread` spawn/join, `mutex`+`lock_guard`, `std::atomic`, `condition_variable` producer/consumer, `std::async`+`future`, `std::jthread`+`stop_token` |
 
 ## How this was built
 
