@@ -8,6 +8,7 @@ from warmup to intermediate modern-C++ machinery.
 ```
 ./build.sh <name>      # build one (e.g. ./build.sh 03_warmup)
 ./build.sh <name> -r   # build and run
+./build.sh <name> -d   # build with -O0 (for a clean gdb experience)
 ./build.sh             # build all
 ```
 
@@ -27,6 +28,7 @@ Standard: **C++23**. Flags: `-Wall -Wextra -Wpedantic -O2 -g`. Compiler: `g++`.
 | 08 | `08_casts.cpp`    | `static_cast`, `dynamic_cast` (pointer→null, ref→`std::bad_cast`), `const_cast` at a legacy boundary, `std::bit_cast` for float↔uint32 |
 | 09 | `09_pointers.cpp` | Raw-pointer mechanics: address-of / indirection, pointer arithmetic over arrays, two-pointer reverse, the const-pointer maze, `->` vs `(*p).`, C-string `strlen` |
 | 10 | `10_threading.cpp` | Concurrency primitives: `std::thread` spawn/join, `mutex`+`lock_guard`, `std::atomic`, `condition_variable` producer/consumer, `std::async`+`future`, `std::jthread`+`stop_token` |
+| 11 | `11_gdb.cpp`       | Driving gdb: breakpoints (line, function, conditional), step/next/finish, `info locals`/`args`, backtrace + frame navigation across a crash and a recursion, watchpoint on a stack location |
 
 ## How this was built
 

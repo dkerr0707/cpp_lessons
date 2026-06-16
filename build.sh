@@ -4,6 +4,7 @@
 #   ./build.sh 01_warmup    # builds just 01_warmup.cpp -> ./bin/01_warmup
 #   ./build.sh 01_warmup.cpp
 # Add -r as the last arg to run the binary after a successful build.
+# Add -d to build with -O0 instead of -O2 (better gdb experience).
 
 set -euo pipefail
 
@@ -18,6 +19,8 @@ args=()
 for a in "$@"; do
     if [[ "$a" == "-r" ]]; then
         run_after=1
+    elif [[ "$a" == "-d" ]]; then
+        CXXFLAGS=(-std=c++23 -Wall -Wextra -Wpedantic -O0 -g)
     else
         args+=("$a")
     fi
