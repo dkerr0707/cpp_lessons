@@ -1,0 +1,6 @@
+build/
+bin/
+*.pgm
+*.png
+*.tiff
+*.jpg

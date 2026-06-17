@@ -48,6 +48,10 @@ otherwise missed or only half-remembered.
 ## Side projects
 
 - `tic_tac_toe/` — a console tic-tac-toe with its own `build.sh`.
+- `pgr_camera/` — hello-world for a Point Grey / FLIR camera via the Spinnaker
+  SDK: `hello_world` grabs a Mono8 frame and saves it as `frame.pgm`;
+  `camera_info` walks every GenICam node and dumps its value + description.
+  CMake-based; see `pgr_camera/README.md`.
 
 ## Layout notes
 
