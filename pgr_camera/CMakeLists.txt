@@ -22,9 +22,9 @@ find_library(SPINNAKER_LIBRARY Spinnaker
 # pattern of the top-level exercises).
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-foreach(target hello_world camera_info)
+foreach(target hello_world camera_info capture_compare)
     add_executable(${target} ${target}.cpp)
-    target_include_directories(${target} PRIVATE ${SPINNAKER_INCLUDE_DIR})
+    target_include_directories(${target} SYSTEM PRIVATE ${SPINNAKER_INCLUDE_DIR})
     target_link_libraries(${target} PRIVATE ${SPINNAKER_LIBRARY})
     target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
     # Embed the Spinnaker library path so the binary finds libSpinnaker.so at
@@ -45,7 +45,7 @@ set_target_properties(streaming PROPERTIES
 # streaming_gst demo: GStreamer pipeline instead of an OpenCV window.
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED IMPORTED_TARGET
-    gstreamer-1.0 gstreamer-app-1.0)
+    gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0)
 add_executable(streaming_gst streaming_gst.cpp)
 target_include_directories(streaming_gst PRIVATE ${SPINNAKER_INCLUDE_DIR})
 target_link_libraries(streaming_gst PRIVATE ${SPINNAKER_LIBRARY} PkgConfig::GST)
