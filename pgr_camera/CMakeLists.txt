@@ -36,7 +36,7 @@ endforeach()
 # streaming demo: needs OpenCV for the display window.
 find_package(OpenCV REQUIRED COMPONENTS core highgui)
 add_executable(streaming streaming.cpp)
-target_include_directories(streaming PRIVATE ${SPINNAKER_INCLUDE_DIR})
+target_include_directories(streaming SYSTEM PRIVATE ${SPINNAKER_INCLUDE_DIR})
 target_link_libraries(streaming PRIVATE ${SPINNAKER_LIBRARY} ${OpenCV_LIBS})
 target_compile_options(streaming PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(streaming PROPERTIES
@@ -47,7 +47,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED IMPORTED_TARGET
     gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0)
 add_executable(streaming_gst streaming_gst.cpp)
-target_include_directories(streaming_gst PRIVATE ${SPINNAKER_INCLUDE_DIR})
+target_include_directories(streaming_gst SYSTEM PRIVATE ${SPINNAKER_INCLUDE_DIR})
 target_link_libraries(streaming_gst PRIVATE ${SPINNAKER_LIBRARY} PkgConfig::GST)
 target_compile_options(streaming_gst PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(streaming_gst PROPERTIES

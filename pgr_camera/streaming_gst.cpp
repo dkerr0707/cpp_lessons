@@ -92,6 +92,57 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        // Cap exposure so it stops being our framerate bottleneck. Auto
+        // exposure left to its own devices in a dim room will pick a
+        // 100ms shutter, which limits us to ~10fps. With manual short
+        // exposure + auto gain, we let the camera ride the gain knob
+        // higher to maintain brightness.
+        auto try_set_enum = [&](const char* node, const char* entry) {
+            Spinnaker::GenApi::CEnumerationPtr e = nm.GetNode(node);
+            if (e.IsValid() && Spinnaker::GenApi::IsWritable(e)) {
+                Spinnaker::GenApi::CEnumEntryPtr v = e->GetEntryByName(entry);
+                if (v.IsValid() && Spinnaker::GenApi::IsAvailable(v)) {
+                    e->SetIntValue(v->GetValue());
+                }
+            }
+        };
+        try_set_enum("ExposureAuto", "Continuous");
+        Spinnaker::GenApi::CFloatPtr exposure = nm.GetNode("ExposureTime");
+        if (exposure.IsValid() && Spinnaker::GenApi::IsWritable(exposure)) {
+            //exposure->SetValue(10000.0);  // 10 ms -> ~100 fps ceiling
+        }
+        try_set_enum("GainAuto", "Continuous");
+
+        // Unlock manual frame-rate control. By default the camera caps to
+        // whatever its exposure-driven calculation says is safe.
+        auto try_set_bool = [&](const char* node, bool val) {
+            Spinnaker::GenApi::CBooleanPtr b = nm.GetNode(node);
+            if (b.IsValid() && Spinnaker::GenApi::IsWritable(b)) {
+                b->SetValue(val);
+            }
+        };
+        try_set_enum("AcquisitionFrameRateAuto", "Off");
+        try_set_bool("AcquisitionFrameRateEnabled", true);  // older firmware
+        try_set_bool("AcquisitionFrameRateEnable",  true);  // newer firmware
+        Spinnaker::GenApi::CFloatPtr setfr = nm.GetNode("AcquisitionFrameRate");
+        if (setfr.IsValid() && Spinnaker::GenApi::IsWritable(setfr)) {
+            setfr->SetValue(setfr->GetMax());
+        }
+
+        Spinnaker::GenApi::CFloatPtr fr = nm.GetNode("AcquisitionFrameRate");
+        if (fr.IsValid() && Spinnaker::GenApi::IsReadable(fr)) {
+            std::cout << "AcquisitionFrameRate (camera report): "
+                      << fr->GetValue() << " fps "
+                      << "(range " << fr->GetMin() << ".." << fr->GetMax() << ")\n";
+        }
+        Spinnaker::GenApi::CFloatPtr et = nm.GetNode("ExposureTime");
+        if (et.IsValid() && Spinnaker::GenApi::IsReadable(et)) {
+            std::cout << "ExposureTime (camera report): "
+                      << et->GetValue() << " us "
+                      << "(at this exposure the max sustainable fps is ~"
+                      << (1e6 / et->GetValue()) << ")\n";
+        }
+
         Spinnaker::GenApi::CIntegerPtr widthNode = nm.GetNode("Width");
         Spinnaker::GenApi::CIntegerPtr heightNode = nm.GetNode("Height");
         const int width = static_cast<int>(widthNode->GetValue());
@@ -174,7 +225,9 @@ int main(int argc, char* argv[]) {
             "format",    G_TYPE_STRING,      "GRAY8",
             "width",     G_TYPE_INT,         width,
             "height",    G_TYPE_INT,         height,
-            "framerate", GST_TYPE_FRACTION,  30, 1,
+            // High cap so downstream doesn't pace us; actual rate is set
+            // by how fast the camera delivers frames.
+            "framerate", GST_TYPE_FRACTION,  120, 1,
             nullptr);
         gst_app_src_set_caps(appsrc, caps);
         gst_caps_unref(caps);
@@ -187,6 +240,8 @@ int main(int argc, char* argv[]) {
                   << ". Ctrl-C to quit.\n";
 
         const auto t0 = std::chrono::steady_clock::now();
+        auto last_report = t0;
+        std::uint64_t frames_since_report = 0;
 
         while (!stop_requested) {
             Spinnaker::ImagePtr image = cam->GetNextImage(1000);
@@ -196,7 +251,11 @@ int main(int argc, char* argv[]) {
             }
 
             const std::size_t size = image->GetBufferSize();
-            auto* holder = new ImageHolder{image};
+            // Default-construct + assign avoids -Wdeprecated-copy on ImagePtr:
+            // Spinnaker declares operator= but lets the copy ctor stay
+            // implicit, which makes brace-init {image} grumpy.
+            auto* holder = new ImageHolder();
+            holder->image = image;
 
             GstBuffer* buffer = gst_buffer_new_wrapped_full(
                 static_cast<GstMemoryFlags>(0),
@@ -218,7 +277,7 @@ int main(int argc, char* argv[]) {
             const auto now = std::chrono::steady_clock::now();
             GST_BUFFER_PTS(buffer) =
                 std::chrono::duration_cast<std::chrono::nanoseconds>(now - t0).count();
-            GST_BUFFER_DURATION(buffer) = GST_SECOND / 30;
+            GST_BUFFER_DURATION(buffer) = GST_SECOND / 120;
 
             const GstFlowReturn ret = gst_app_src_push_buffer(appsrc, buffer);
             // Ownership of `buffer` transfers to appsrc on success; the
@@ -227,6 +286,18 @@ int main(int argc, char* argv[]) {
             if (ret != GST_FLOW_OK) {
                 std::cerr << "Push buffer failed: " << ret << '\n';
                 break;
+            }
+
+            ++frames_since_report;
+            const auto elapsed = now - last_report;
+            if (elapsed >= std::chrono::seconds(1)) {
+                const double seconds =
+                    std::chrono::duration<double>(elapsed).count();
+                const double fps = frames_since_report / seconds;
+                // \r + flush keeps the line in place instead of scrolling.
+                std::cout << "\rFPS: " << fps << "    " << std::flush;
+                frames_since_report = 0;
+                last_report = now;
             }
         }
 
